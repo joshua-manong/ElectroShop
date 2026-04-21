@@ -1,0 +1,258 @@
+<?php
+$pageTitle = 'Home';
+require_once 'includes/config.php';
+
+// Fetch featured products
+$featuredStmt = $pdo->query("SELECT p.*, c.category_name FROM products p JOIN categories c ON p.category_id = c.category_id WHERE p.is_featured = 1 ORDER BY p.created_at DESC LIMIT 8");
+$featuredProducts = $featuredStmt->fetchAll();
+
+// Fetch categories
+$catStmt = $pdo->query("SELECT c.*, COUNT(p.product_id) AS product_count FROM categories c LEFT JOIN products p ON c.category_id = p.category_id GROUP BY c.category_id ORDER BY c.category_name");
+$categories = $catStmt->fetchAll();
+
+// Fetch latest products
+$latestStmt = $pdo->query("SELECT p.*, c.category_name FROM products p JOIN categories c ON p.category_id = c.category_id ORDER BY p.created_at DESC LIMIT 4");
+$latestProducts = $latestStmt->fetchAll();
+
+require_once 'includes/header.php';
+?>
+
+<!-- ============ HERO SECTION ============ -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6 hero-content">
+                <div class="hero-badge">
+                    <i class="bi bi-lightning-fill"></i> Flash Deals Active Now
+                </div>
+                <h1 class="hero-title">
+                    Latest <span class="highlight">Tech</span><br>
+                    at the Best Price
+                </h1>
+                <p class="hero-subtitle">
+                    Shop Smartphones, Laptops, Accessories and more. 
+                    Top brands, unbeatable prices, delivered to your door across the Philippines.
+                </p>
+                <div class="hero-buttons">
+                    <a href="shop.php" class="btn-primary-custom">
+                        <i class="bi bi-grid-fill"></i> Shop Now
+                    </a>
+                    <a href="shop.php?featured=1" class="btn-outline-custom">
+                        <i class="bi bi-star-fill"></i> View Deals
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div>
+                        <div class="hero-stat-number">10K+</div>
+                        <div class="hero-stat-label">Products</div>
+                    </div>
+                    <div>
+                        <div class="hero-stat-number">50K+</div>
+                        <div class="hero-stat-label">Customers</div>
+                    </div>
+                    <div>
+                        <div class="hero-stat-number">99%</div>
+                        <div class="hero-stat-label">Satisfaction</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="hero-image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=600&q=80"
+                         alt="Latest Smartphones" class="hero-device-image" style="border-radius:20px;">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ TRUST BADGES ============ -->
+<section style="background: var(--black-surface); border-top: 1px solid var(--black-border); border-bottom: 1px solid var(--black-border); padding: 20px 0;">
+    <div class="container">
+        <div class="row g-3 text-center">
+            <?php $badges = [
+                ['bi-truck','Free Shipping','On orders ₱2,000+'],
+                ['bi-shield-check','100% Authentic','Genuine products only'],
+                ['bi-arrow-repeat','Easy Returns','30-day return policy'],
+                ['bi-headset','24/7 Support','Always here to help'],
+            ]; foreach ($badges as $b): ?>
+            <div class="col-6 col-md-3">
+                <div class="d-flex align-items-center justify-content-center gap-3 py-2">
+                    <i class="bi <?= $b[0] ?> text-blue fs-4"></i>
+                    <div class="text-start">
+                        <div style="font-weight:700;font-size:.85rem;"><?= $b[1] ?></div>
+                        <div style="font-size:.75rem;color:var(--text-secondary);"><?= $b[2] ?></div>
+                    </div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+
+<!-- ============ CATEGORIES ============ -->
+<section class="section-spacing">
+    <div class="container">
+        <div class="text-center mb-5">
+            <div class="section-label justify-content-center">Browse By Category</div>
+            <h2 class="section-title">Shop by Category</h2>
+            <p class="section-subtitle">Find exactly what you're looking for</p>
+        </div>
+        <div class="row g-3">
+            <?php foreach ($categories as $cat): ?>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="shop.php?category=<?= $cat['category_id'] ?>" class="category-card">
+                    <div class="category-icon">
+                        <i class="bi <?= $cat['icon'] ?>"></i>
+                    </div>
+                    <div class="category-name"><?= $cat['category_name'] ?></div>
+                    <div class="category-count"><?= $cat['product_count'] ?> Products</div>
+                </a>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+
+<!-- ============ FEATURED PRODUCTS ============ -->
+<section class="section-spacing" style="padding-top:0;">
+    <div class="container">
+        <div class="d-flex align-items-end justify-content-between mb-5">
+            <div>
+                <div class="section-label">Handpicked for You</div>
+                <h2 class="section-title">Featured Products</h2>
+            </div>
+            <a href="shop.php?featured=1" class="btn-outline-custom">
+                View All <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        <div class="row g-4">
+            <?php foreach ($featuredProducts as $p): 
+                $discount = $p['original_price'] ? round(100 - ($p['price'] / $p['original_price'] * 100)) : 0;
+            ?>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="product-card">
+                    <div class="product-card-img-wrap">
+                        <img src="<?= $p['product_image'] ?>" alt="<?= htmlspecialchars($p['product_name']) ?>" class="product-card-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=500'">
+                        <?php if ($discount > 0): ?>
+                        <span class="product-badge badge-sale">-<?= $discount ?>%</span>
+                        <?php endif; ?>
+                        <div class="product-card-actions">
+                            <button class="action-btn" onclick="toggleWishlist(<?= $p['product_id'] ?>, this)" title="Wishlist">
+                                <i class="bi bi-heart"></i>
+                            </button>
+                            <a href="product.php?id=<?= $p['product_id'] ?>" class="action-btn" title="Quick View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="product-card-body">
+                        <div class="product-brand"><?= htmlspecialchars($p['brand']) ?></div>
+                        <div class="product-title">
+                            <a href="product.php?id=<?= $p['product_id'] ?>"><?= htmlspecialchars($p['product_name']) ?></a>
+                        </div>
+                        <div class="product-rating">
+                            <div class="stars">
+                                <?php for($i=1;$i<=5;$i++) echo '<i class="bi bi-star' . ($i <= round($p['rating']) ? '-fill' : '') . '"></i>'; ?>
+                            </div>
+                            <span class="rating-count">(<?= $p['review_count'] ?>)</span>
+                        </div>
+                        <div class="product-price-row">
+                            <div>
+                                <span class="product-price"><?= formatPrice($p['price']) ?></span>
+                                <?php if ($p['original_price']): ?>
+                                <span class="product-original-price"><?= formatPrice($p['original_price']) ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <button class="add-cart-btn" onclick="addToCart(<?= $p['product_id'] ?>)">
+                                <i class="bi bi-cart-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+
+<!-- ============ PROMO BANNER ============ -->
+<section class="section-spacing" style="padding-top:0;">
+    <div class="container">
+        <div class="promo-banner">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-8">
+                    <div class="promo-label">Limited Time Offer</div>
+                    <h2 class="promo-title">Up to <span>40% OFF</span><br>on Top Brands</h2>
+                    <p class="promo-subtitle">Shop Smartphones, Laptops, and Accessories. Deals end soon!</p>
+                    <a href="shop.php" class="btn btn-light btn-lg px-4 rounded-pill fw-bold">
+                        <i class="bi bi-lightning-fill me-2 text-warning"></i> Shop Deals
+                    </a>
+                </div>
+                <div class="col-lg-4 text-center d-none d-lg-block" style="position:relative;">
+                    <div style="background:rgba(255,255,255,0.1);border-radius:20px;padding:20px;">
+                        <div style="font-family:var(--font-display);font-size:4rem;font-weight:900;color:#FFD700;">40%</div>
+                        <div style="font-size:1.5rem;color:white;font-weight:600;">OFF TODAY</div>
+                        <div style="color:rgba(255,255,255,0.7);font-size:.85rem;">Use code: ELECTRO40</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ NEW ARRIVALS ============ -->
+<section class="section-spacing" style="padding-top:0;">
+    <div class="container">
+        <div class="d-flex align-items-end justify-content-between mb-5">
+            <div>
+                <div class="section-label">Just In</div>
+                <h2 class="section-title">New Arrivals</h2>
+            </div>
+            <a href="shop.php" class="btn-outline-custom">View All <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="row g-4">
+            <?php foreach ($latestProducts as $p): ?>
+            <div class="col-6 col-md-3">
+                <div class="product-card">
+                    <div class="product-card-img-wrap">
+                        <img src="<?= $p['product_image'] ?>" alt="<?= htmlspecialchars($p['product_name']) ?>" class="product-card-img" loading="lazy">
+                        <span class="product-badge badge-new">New</span>
+                        <div class="product-card-actions">
+                            <button class="action-btn" onclick="toggleWishlist(<?= $p['product_id'] ?>, this)"><i class="bi bi-heart"></i></button>
+                        </div>
+                    </div>
+                    <div class="product-card-body">
+                        <div class="product-brand"><?= htmlspecialchars($p['brand']) ?></div>
+                        <div class="product-title"><a href="product.php?id=<?= $p['product_id'] ?>"><?= htmlspecialchars($p['product_name']) ?></a></div>
+                        <div class="product-price-row">
+                            <span class="product-price"><?= formatPrice($p['price']) ?></span>
+                            <button class="add-cart-btn" onclick="addToCart(<?= $p['product_id'] ?>)"><i class="bi bi-cart-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+
+<!-- ============ BRANDS ============ -->
+<section class="section-spacing" style="padding-top:0;padding-bottom:60px;">
+    <div class="container">
+        <div class="text-center mb-4">
+            <div class="section-label justify-content-center">Trusted Brands</div>
+        </div>
+        <div style="background:var(--black-card);border:1px solid var(--black-border);border-radius:var(--radius-lg);padding:32px;">
+            <div class="row g-3 align-items-center justify-content-center">
+                <?php foreach (['Apple','Samsung','Sony','ASUS','Lenovo','NVIDIA','Xiaomi'] as $brand): ?>
+                <div class="col-6 col-md-3 col-lg-auto text-center">
+                    <span style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;color:var(--text-secondary);letter-spacing:1px;"><?= $brand ?></span>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
+</section>
+
+<?php require_once 'includes/footer.php'; ?>
